@@ -13,10 +13,7 @@ const createNew = async (req, res, next) => {
       abortEarly: false,
     });
 
-    // return next();
-    return res.status(StatusCodes.OK).json({
-      message: 'POST API: create board'
-    })
+    return next();
   } catch (err) {
     console.log(err);
     console.log(new Error(err));
