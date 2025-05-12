@@ -4,9 +4,6 @@ import { boardService } from '~/services/boardService';
 
 const createNew = async (req, res, next) => {
   try {
-    // return res.status(StatusCodes.CREATED).json({
-    //   message: 'POST: API create new board'
-    // });
     const createdBoard = await boardService.createNew(req.body);
 
     res.status(StatusCodes.CREATED).json({
@@ -18,6 +15,18 @@ const createNew = async (req, res, next) => {
   }
 }
 
+const getDetails = async (req, res, next) => {
+  try {
+    const boardId = req.params.id;
+    const board = await boardService.getDetails(boardId);
+
+    res.status(StatusCodes.OK).json(board);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export const boardController = {
-  createNew
+  createNew,
+  getDetails
 }
