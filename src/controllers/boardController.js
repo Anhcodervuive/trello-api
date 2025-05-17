@@ -6,10 +6,7 @@ const createNew = async (req, res, next) => {
   try {
     const createdBoard = await boardService.createNew(req.body);
 
-    res.status(StatusCodes.CREATED).json({
-      message: 'Board created successfully',
-      data: createdBoard,
-    });
+    res.status(StatusCodes.CREATED).json(createdBoard);
   } catch (error) {
     next(error);
   }
@@ -26,7 +23,19 @@ const getDetails = async (req, res, next) => {
   }
 }
 
+const update = async (req, res, next) => {
+  try {
+    const boardId = req.params.id;
+    const updatedBoard = await boardService.update(boardId, req.body)
+
+    res.status(StatusCodes.CREATED).json(updatedBoard);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export const boardController = {
   createNew,
-  getDetails
+  getDetails,
+  update
 }

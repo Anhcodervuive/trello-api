@@ -6,10 +6,7 @@ const createNew = async (req, res, next) => {
   try {
     const createdColumn = await columnService.createNew(req.body);
 
-    res.status(StatusCodes.CREATED).json({
-      message: 'Column created successfully',
-      data: createdColumn,
-    });
+    res.status(StatusCodes.CREATED).json(createdColumn);
   } catch (error) {
     next(error);
   }

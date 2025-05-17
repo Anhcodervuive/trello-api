@@ -67,7 +67,7 @@ const pushCardOrderIds = async (card) => {
       }
     )
 
-    return result.value || null;
+    return result;
   } catch (error) {
     throw new Error(error)
   }
