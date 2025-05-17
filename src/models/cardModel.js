@@ -26,8 +26,13 @@ const validateBeforeCreate = async (data) => {
 const createNew = async (data) => {
   try {
     const validData = await validateBeforeCreate(data);
-    const createdBoard = await GET_DB().collection(CARD_COLLECTION_NAME).insertOne(validData);
-    return createdBoard;
+    const newCardToAdd = {
+      ...validData,
+      boardId: new ObjectId(validData.boardId),
+      columnId: new ObjectId(validData.columnId),
+    }
+    const createdCard = await GET_DB().collection(CARD_COLLECTION_NAME).insertOne(newCardToAdd);
+    return createdCard;
   } catch (error) {
     throw new Error(error)
   }
@@ -36,7 +41,7 @@ const createNew = async (data) => {
 const findOneById = async (id) => {
   try {
     const column = await GET_DB().collection(CARD_COLLECTION_NAME).findOne({
-      _id: ObjectId.createFromHexString(id),
+      _id: new ObjectId(id),
     });
     return column;
   }

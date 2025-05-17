@@ -16,6 +16,6 @@ Router.use('/boards', BoardRoute);
 
 Router.use('/columns', ColumnRoute);
 
-// Router.use('/cards', BoardRoute);
+Router.use('/cards', CardRoute);
 
 export const APIs_v1 = Router;

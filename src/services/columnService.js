@@ -1,4 +1,5 @@
 import { columnModel } from '~/models/columnModel';
+import { boardModel } from '~/models/boardModel';
 
 const createNew = async (payload) => {
   try {
@@ -7,10 +8,17 @@ const createNew = async (payload) => {
     };
 
     const createdColumn = await columnModel.createNew(newColumn);
+    // console.log(createdColumn.insertedId.toString());
 
-    const column = await columnModel.findOneById(createdColumn.insertedId.toString());
+    const getNewColumn = await columnModel.findOneById(createdColumn.insertedId.toString());
 
-    return column;
+    if (getNewColumn) {
+      getNewColumn.cards = []
+
+      await boardModel.pushColumnOrderIds(getNewColumn)
+    }
+
+    return getNewColumn;
   } catch (error) {
     throw error;
   }
