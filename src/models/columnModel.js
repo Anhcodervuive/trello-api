@@ -25,6 +25,8 @@ const validateBeforeCreate = async (data) => {
   });
 }
 
+const INVALID_UPDATE_FIELDS = ['_id', 'createdAt', 'boardId']
+
 const createNew = async (data) => {
   try {
     const validData = await validateBeforeCreate(data);
@@ -73,10 +75,36 @@ const pushCardOrderIds = async (card) => {
   }
 }
 
+const update = async (columnId, updatedData) => {
+  try {
+    Object.keys(updatedData).forEach(field => {
+      if (INVALID_UPDATE_FIELDS.includes(field)) {
+        delete updatedData[field]
+      }
+    })
+    const result = await GET_DB().collection(COLUMN_COLLECTION_NAME).findOneAndUpdate(
+      {
+        _id: new ObjectId(columnId)
+      },
+      {
+        $set: updatedData
+      },
+      {
+        returnDocument : 'after' // Sẽ trả về kết quả mới sau khi cập nhật
+      }
+    )
+
+    return result;
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 export const columnModel = {
   COLUMN_COLLECTION_NAME,
   COLUMN_COLLECTION_SCHEMA,
   createNew,
   findOneById,
-  pushCardOrderIds
+  pushCardOrderIds,
+  update
 }

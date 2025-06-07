@@ -24,6 +24,35 @@ const createNew = async (req, res, next) => {
   }
 }
 
+const update = async (req, res, next) => {
+  // Đối với trường hợp update:
+  // - dữ liệu không cần full
+  // - allowUnkown cho phép đây một số trường nằm ngoài correctCondition đã định nghĩa
+  const correctCondition = Joi.object({
+    // Nếu cần duy chuyển card qua board khác thì mới cần
+    // boardId: Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
+    title: Joi.string().min(3).max(50).trim().strict(),
+    cardOrderIds : Joi.array().items(
+      Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
+    )
+  })
+
+  try {
+    await correctCondition.validateAsync(req.body, {
+      abortEarly: false,
+      allowUnknown: true
+    });
+
+    return next();
+  } catch (err) {
+    console.log(new Error(err));
+    return res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({
+      errors: new Error(err).message
+    })
+  }
+}
+
 export const columnValidation = {
-  createNew
+  createNew,
+  update
 }

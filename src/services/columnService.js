@@ -24,6 +24,22 @@ const createNew = async (payload) => {
   }
 }
 
+const update = async (boardId, reqBody) => {
+  try {
+    const updateData = {
+      ...reqBody,
+      updateAt: Date.now()
+    }
+
+    const updatedColumn = await columnModel.update(boardId, updateData)
+
+    return updatedColumn
+  } catch (error) {
+    throw error;
+  }
+}
+
 export const columnService = {
   createNew,
+  update
 }
