@@ -24,14 +24,14 @@ const createNew = async (payload) => {
   }
 }
 
-const update = async (boardId, reqBody) => {
+const update = async (columnId, reqBody) => {
   try {
     const updateData = {
       ...reqBody,
       updateAt: Date.now()
     }
 
-    const updatedColumn = await columnModel.update(boardId, updateData)
+    const updatedColumn = await columnModel.update(columnId, updateData)
 
     return updatedColumn
   } catch (error) {
