@@ -6,6 +6,7 @@ import { env } from './config/environment';
 import { APIs_v1 } from './routes/v1';
 import { errorHandlingMiddleware } from '~/middlewares/errorHandlingMiddleware';
 import { corsOptions } from './config/cors';
+import cookieParser from 'cookie-parser';
 
 const START_SERVER = () => {
   const app = express();
@@ -13,6 +14,13 @@ const START_SERVER = () => {
   const hostname = env.APP_HOST;
   const port = env.APP_PORT;
 
+  // Fix cache from disk của Express js
+  app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store'),
+    next()
+  })
+
+  app.use(cookieParser())
   app.use(cors(corsOptions));
   app.use(express.json())
 
