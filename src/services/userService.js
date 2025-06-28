@@ -8,6 +8,8 @@ import { WEBSITE_DOMAIN } from "~/utils/constants"
 import { sendRegisterEmail } from "~/providers/smtpMailerProvider"
 import { JwtProvider } from "~/providers/JwtProvider"
 import { env } from "~/config/environment"
+import { CloudinaryProvider } from "~/providers/cloudinaryProvider"
+import { extractPublicIdFromUrl } from "~/utils/mapper"
 
 const createNew = async (reqBody) => {
   try {
@@ -144,7 +146,7 @@ const refreshToken = async (clientRefreshToken) => {
   }
 }
 
-const update = async (userId, reqBody) => {
+const update = async (userId, reqBody, userAvtFile) => {
   try {
     const existedUser = await userModel.findOneById(userId)
     if (!existedUser) throw new ApiError(StatusCodes.NOT_FOUND, 'Account not found!')
@@ -159,7 +161,18 @@ const update = async (userId, reqBody) => {
       updatedUser = await userModel.update(userId, {
         password: bcryptjs.hashSync(reqBody.new_password, 8),
       })
-    } else {
+    } else if (userAvtFile) {
+      if (existedUser.avatar) {
+        const publicImageId = extractPublicIdFromUrl(existedUser.avatar)
+        await CloudinaryProvider.deleteImage(publicImageId)
+      }
+      const uploadResult = await CloudinaryProvider.streamUpload(userAvtFile.buffer, 'users')
+      console.log(uploadResult);
+      updatedUser = await userModel.update(userId, {
+        avatar: uploadResult.secure_url
+      })
+    }
+    else {
       updatedUser = await userModel.update(userId, reqBody)
     }
 
