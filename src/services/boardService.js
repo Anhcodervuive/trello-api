@@ -8,14 +8,14 @@ import { columnModel } from '~/models/columnModel';
 import { cardModel } from '~/models/cardModel';
 import { DEFAULT_ITEMS_PER_PAGE, DEFAULT_PAGE } from '~/utils/constants';
 
-const createNew = async (payload) => {
+const createNew = async (userId, payload) => {
   try {
     const newBoard = {
       ...payload,
       slug: slugify(payload.title),
     };
 
-    const createdBoard = await boardModel.createNew(newBoard);
+    const createdBoard = await boardModel.createNew(userId, newBoard);
 
     const board = await boardModel.findOneById(createdBoard.insertedId.toString());
 
@@ -25,9 +25,9 @@ const createNew = async (payload) => {
   }
 }
 
-const getDetails = async (boardId) => {
+const getDetails = async (userId, boardId) => {
   try {
-    const board = await boardModel.getDetails(boardId);
+    const board = await boardModel.getDetails(userId, boardId);
 
     if (!board) {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Board not found');
