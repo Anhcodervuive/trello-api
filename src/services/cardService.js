@@ -1,5 +1,8 @@
 import { cardModel } from '~/models/cardModel';
 import { columnModel } from '~/models/columnModel';
+import { CloudinaryProvider } from '~/providers/cloudinaryProvider';
+import { CLOUDINARY_FOLDER_SAVE_CARDS_COVER } from '~/utils/constants';
+import { extractPublicIdFromUrl } from '~/utils/mapper';
 
 const createNew = async (payload) => {
   try {
@@ -21,14 +24,29 @@ const createNew = async (payload) => {
   }
 }
 
-const update = async (cardId, reqBody) => {
+const update = async (cardId, reqBody, cardCoverFile) => {
   try {
     const updateData = {
       ...reqBody,
       updatedAt: Date.now()
     }
 
-    const updatedCard = await cardModel.update(cardId, updateData)
+    let updatedCard = {}
+
+    if (cardCoverFile) {
+      const cardNeedToUpdate = await cardModel.findOneById(cardId)
+      if (cardNeedToUpdate.cover) {
+        const publicImageId = extractPublicIdFromUrl(cardNeedToUpdate.cover)
+        await CloudinaryProvider.deleteImage(publicImageId)
+      }
+      const uploadResult = await CloudinaryProvider.streamUpload(cardCoverFile.buffer, CLOUDINARY_FOLDER_SAVE_CARDS_COVER)
+      updatedCard = await cardModel.update(cardId, {
+        cover: uploadResult.secure_url
+      })
+    } else {
+      updatedCard = await cardModel.update(cardId, updateData)
+    }
+
 
     return updatedCard
   } catch (error) {

@@ -4,7 +4,7 @@ import bcryptjs from 'bcryptjs'
 import { v4 as uuidv4 } from 'uuid'
 import ApiError from "~/utils/ApiError"
 import { pickUser } from "~/utils/formatter"
-import { WEBSITE_DOMAIN } from "~/utils/constants"
+import { CLOUDINARY_FOLDER_SAVE_USERS_AVT, WEBSITE_DOMAIN } from "~/utils/constants"
 import { sendRegisterEmail } from "~/providers/smtpMailerProvider"
 import { JwtProvider } from "~/providers/JwtProvider"
 import { env } from "~/config/environment"
@@ -166,7 +166,7 @@ const update = async (userId, reqBody, userAvtFile) => {
         const publicImageId = extractPublicIdFromUrl(existedUser.avatar)
         await CloudinaryProvider.deleteImage(publicImageId)
       }
-      const uploadResult = await CloudinaryProvider.streamUpload(userAvtFile.buffer, 'users')
+      const uploadResult = await CloudinaryProvider.streamUpload(userAvtFile.buffer, CLOUDINARY_FOLDER_SAVE_USERS_AVT)
       console.log(uploadResult);
       updatedUser = await userModel.update(userId, {
         avatar: uploadResult.secure_url
