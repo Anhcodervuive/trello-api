@@ -3,13 +3,15 @@ import { ObjectId } from 'mongodb'
 import { GET_DB } from '~/config/mongodb'
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators'
 import { INVITATION_TYPES, BOARD_INVITATION_STATUS } from '~/utils/constants'
+import { userModel } from './userModel'
+import { boardModel } from './boardModel'
 
 // Define Collection (name & schema)
 const INVITATION_COLLECTION_NAME = 'invitations'
 
 const INVITATION_COLLECTION_SCHEMA = Joi.object({
-  inviterId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
-  inviteeId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
+  inviterId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE), // Người mời
+  inviteeId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE), // Người được mời
   type: Joi.string().required().valid(...Object.values(INVITATION_TYPES)),
   boardInvitation: Joi.object({
     boardId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
@@ -93,10 +95,56 @@ const update = async (invitationId, updateData) => {
   }
 }
 
+const findByUser = async (userId) => {
+  const queryConditions = [
+    { inviteeId: new ObjectId(userId), },
+    { _destroy: false },
+  ]
+
+  const result = await GET_DB().collection(INVITATION_COLLECTION_NAME).aggregate([
+    {
+      $match: { $and: queryConditions }
+    },
+    {
+      $lookup: {
+        from: userModel.USER_COLLECTION_NAME,
+        localField: 'inviterId',
+        foreignField: '_id',
+        as: 'inviter',
+        // pipeline trong lookup là để xử lý một hoặc nhiều luồng cần thiết
+        // $project để chỉ định vài field không muốn lấy về bằng cách gán nó giá trị 0
+        pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
+      },
+    },
+    {
+      $lookup: {
+        from: userModel.USER_COLLECTION_NAME,
+        localField: 'inviteeId',
+        foreignField: '_id',
+        as: 'invitee',
+        // pipeline trong lookup là để xử lý một hoặc nhiều luồng cần thiết
+        // $project để chỉ định vài field không muốn lấy về bằng cách gán nó giá trị 0
+        pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
+      },
+    },
+    {
+      $lookup: {
+        from: boardModel.BOARD_COLLECTION_NAME,
+        localField: 'boardInvitation.boardId',
+        foreignField: '_id',
+        as: 'board',
+      },
+    },
+  ]).toArray();
+
+  return result
+}
+
 export const invitationModel = {
   INVITATION_COLLECTION_NAME,
   INVITATION_COLLECTION_SCHEMA,
   createNewBoardInvitation,
   findOneById,
-  update
+  update,
+  findByUser
 }
