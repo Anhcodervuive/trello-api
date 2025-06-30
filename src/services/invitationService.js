@@ -1,0 +1,58 @@
+import { StatusCodes } from 'http-status-codes'
+import ApiError from '~/utils/ApiError'
+import { userModel } from '~/models/userModel'
+import { boardModel } from '~/models/boardModel'
+import { invitationModel } from '~/models/invitationModel'
+import { INVITATION_TYPES, BOARD_INVITATION_STATUS } from '~/utils/constants'
+import { pickUser } from '~/utils/formatter'
+
+const createNewBoardInvitation = async (reqBody, inviterId) => {
+  try {
+    // Người đi mời: chính là người đang request
+    const inviter = await userModel.findOneById(inviterId)
+
+    // Người được mời: lấy theo email gửi từ phía FE
+    const invitee = await userModel.findOneByEmail(reqBody.inviteeEmail)
+
+    // Lấy thông tin board
+    const board = await boardModel.findOneById(reqBody.boardId)
+
+    // Nếu 1 trong 3 không tồn tại → báo lỗi 404
+    if (!invitee || !inviter || !board) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Inviter, Invitee or Board not found!')
+    }
+
+    // Tạo dữ liệu lời mời để lưu vào DB
+    const newInvitationData = {
+      inviterId,
+      inviteeId: invitee._id.toString(),
+      type: INVITATION_TYPES.BOARD_INVITATION,
+      boardInvitation: {
+        boardId: board._id.toString(),
+        status: BOARD_INVITATION_STATUS.PENDING
+      }
+    }
+
+    // Ghi vào DB
+    const createdInvitation = await invitationModel.createNewBoardInvitation(newInvitationData)
+
+    // Truy vấn lại invitation để lấy dữ liệu đầy đủ (có thể populate hoặc format khác)
+    const getInvitation = await invitationModel.findOneById(createdInvitation.insertedId.toString())
+
+    // Trả kết quả về cho FE, bao gồm cả thông tin board và người liên quan
+    const resInvitation = {
+      ...getInvitation,
+      board,
+      inviter: pickUser(inviter),
+      invitee: pickUser(invitee)
+    }
+
+    return resInvitation
+  } catch (error) {
+    throw error
+  }
+}
+
+export const invitationService = {
+  createNewBoardInvitation
+}
