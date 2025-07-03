@@ -8,6 +8,13 @@ import { errorHandlingMiddleware } from '~/middlewares/errorHandlingMiddleware';
 import { corsOptions } from './config/cors';
 import cookieParser from 'cookie-parser';
 
+// Xử lý socket real-time với gói socket.io
+// https://socket.io/get-started/chat/#integrating-socketio
+import http from 'http'
+import Socket from 'socket.io'
+import { inviteUserToBoardSocket } from './sockets/inviteUserToBoardSocket';
+
+
 const START_SERVER = () => {
   const app = express();
 
@@ -29,7 +36,19 @@ const START_SERVER = () => {
   // Middleware for handling errors
   app.use(errorHandlingMiddleware);
 
-  app.listen(port, hostname, () => {
+  // Tạo 1 server mới bọc thằng app của express để làm real-time socket.io
+  const server = http.createServer(app)
+  // Khởi tạo biến io với server và cors
+  const io = Socket(server, {
+    cors: corsOptions
+  })
+
+  io.on('connection', (socket) => {
+    console.log('a user connected');
+    inviteUserToBoardSocket(socket)
+  })
+
+  server.listen(port, hostname, () => {
     // eslint-disable-next-line no-console
     console.log(`Hello, I am running at http://${ hostname }:${ port }/`);
   })
