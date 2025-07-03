@@ -5,15 +5,12 @@ import ApiError from "~/utils/ApiError"
 
 const isAuthorized = async (req, res, next) => {
   const clientAccessToken = req.cookies?.accessToken
-  console.log(req.cookies?.accessToken, req.cookies?.refreshToken);
   if (!clientAccessToken) {
-    console.log('flag 1');
     return next(new ApiError(StatusCodes.GONE, 'Unauthorized! (token not found)'))
   }
 
   try {
     const accessTokenDecoded = await JwtProvider.verifyToken(clientAccessToken, env.ACCESS_TOKEN_SECRET_SIGNATURE)
-    console.log(accessTokenDecoded);
 
     req.jwtDecoded = accessTokenDecoded
 
